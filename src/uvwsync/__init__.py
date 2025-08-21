@@ -131,12 +131,12 @@ def main():
         raise SystemExit(f"Error running 'rsync': {e}")
 
     if destination_host:
-        raise SystemExit("Remote destination is not supported.")
+        ssh = [ "ssh", destination_host ]
     else:
         ssh = [ ]
 
     subprocess.run(ssh + [
-        "uv", "sync", "--package", package, "--directory", destination_path
+        ".local/bin/uv", "sync", "--package", package, "--directory", destination_path
     ], check=True)
 
     if (workspace / package / "after_deploy.sh").exists():
