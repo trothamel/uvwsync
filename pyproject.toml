@@ -1,0 +1,17 @@
+[project]
+name = "uvwsync"
+version = "0.1.0"
+description = "UV Sync and Deploy Tool"
+readme = "README.md"
+authors = [
+    { name = "Tom Rothamel", email = "tom@rothamel.us" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+uvwsync = "uvwsync:main"
+
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
