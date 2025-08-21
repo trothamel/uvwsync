@@ -109,10 +109,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("package", help="The name of the package to upload and sync.")
     ap.add_argument("destination", help="The destination to upload and sync the package to.")
+    ap.add_argument("--workspace", type=str, default=None, help="Path to the workspace directory. If given, this will be used instead of auto-detection.")
 
     args = ap.parse_args()
 
-    workspace = find_workspace()
+    if args.workspace:
+        workspace = pathlib.Path(args.workspace).resolve()
+    else:
+        workspace = find_workspace()
+
     package: str = args.package
     destination: str = args.destination
 
