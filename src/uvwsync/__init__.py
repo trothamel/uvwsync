@@ -77,6 +77,30 @@ def find_packages(package: str):
     return rv
 
 
+def get_extra_files(workspace: pathlib.Path) -> list[pathlib.Path]:
+    """
+    Returns a list of Path objects for files listed in tool.uvwsync.extra-files
+    in the pyproject.toml file in the given workspace directory.
+    If the key does not exist, returns an empty list.
+    """
+    pyproject_path = workspace / "pyproject.toml"
+    if not pyproject_path.exists():
+        return []
+
+    with pyproject_path.open("rb") as f:
+        config = tomllib.load(f)
+
+    try:
+        files = config["tool"]["uvwsync"]["extra-files"]
+    except KeyError:
+        return []
+
+    if not isinstance(files, list):
+        raise SystemExit(f"Expected a list for 'tool.uvwsync.extra-files' in {pyproject_path}, got {type(files).__name__}.")
+
+    return [workspace / pathlib.Path(f) for f in files]
+
+
 def main():
 
     # unset VIRTUAL_ENV.
@@ -109,6 +133,8 @@ def main():
                 packages.add(np)
                 workset.add(np)
 
+    extra_files = get_extra_files(workspace)
+
     rsync_command = [
         "rsync",
         "-FF",
@@ -119,7 +145,7 @@ def main():
         workspace / "pyproject.toml",
         workspace / "uv.lock",
         workspace / ".python-version"
-    ] + [workspace / pkg for pkg in sorted(packages)] + [
+    ] + [workspace / pkg for pkg in sorted(packages)] + extra_files + [
         destination,
     ]
 
@@ -132,13 +158,17 @@ def main():
 
     if destination_host:
         ssh = [ "ssh", destination_host ]
+        uv = ".local/bin/uv"
     else:
         ssh = [ ]
+        uv = "uv"
 
     subprocess.run(ssh + [
-        ".local/bin/uv", "sync", "--package", package, "--directory", destination_path
+        uv, "sync", "--package", package, "--directory", destination_path
     ], check=True)
 
     if (workspace / package / "after_deploy.sh").exists():
         subprocess.run(ssh + [ f"{destination_path}/{package}/after_deploy.sh"
         ], check=True)
+
+print("UV")
